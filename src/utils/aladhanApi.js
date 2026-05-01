@@ -26,6 +26,7 @@ export const METHOD_MAP = {
 export const SCHOOL_MAP = {
   Shafi: 0,   // Standard (Shafi)
   Hanafi: 1,  // Hanafi
+  Salafi: 0,  // Salafi (follows Standard)
 };
 
 // ── Core fetcher with sequential fallback ─────────────────────

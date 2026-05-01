@@ -166,7 +166,7 @@ export default function Home({ settings, onSettingsNavigate }) {
 
             {/* Premium Countdown */}
             <div className="mb-6">
-              <FlipCountdown seconds={countdown} />
+              <FlipCountdown seconds={countdown} color={prayerColor} />
             </div>
 
             {/* Prayer Timeline */}

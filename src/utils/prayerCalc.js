@@ -134,6 +134,7 @@ export const CALCULATION_METHODS = {
 export const MADHABS = {
   Shafi: { name: 'Shafi (Standard)', shadowFactor: 1 },
   Hanafi: { name: 'Hanafi', shadowFactor: 2 },
+  Salafi: { name: 'Salafi', shadowFactor: 1 },
 };
 
 // Main prayer time calculator
