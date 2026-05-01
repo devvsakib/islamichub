@@ -1,13 +1,15 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import {
   IconMapPin, IconBell, IconPalette, IconLanguage,
   IconTrash, IconChevronRight, IconAlertTriangle,
   IconMoon, IconSun, IconDeviceLaptop, IconCheck,
+  IconSearch, IconLoader2,
 } from '@tabler/icons-react';
 import { CALCULATION_METHODS, MADHABS } from '@/utils/prayerCalc';
-import { CITIES } from '@/utils/qiblaCalc';
+import { searchPlace } from '@/utils/geocoding';
 import { resetAllData } from '@/utils/storage';
+import { requestNotificationPermission, canNotify } from '@/utils/notifications';
 import { Switch, Select, SelectTrigger, SelectContent, SelectItem } from '@/components/ui/index.jsx';
 import { Dialog, DialogContent } from '@/components/ui/Dialog.jsx';
 import PageWrapper from '@/components/PageWrapper';
@@ -44,6 +46,9 @@ export default function SettingsPage({ settings, onUpdate, theme, onThemeChange 
   const [saved, setSaved] = useState(false);
   const [citySearch, setCitySearch] = useState('');
   const [citySuggestions, setCitySuggestions] = useState([]);
+  const [searching, setSearching] = useState(false);
+  const [searchError, setSearchError] = useState('');
+  const debounceRef = useRef(null);
 
   const update = (key, value) => {
     onUpdate({ [key]: value });
@@ -51,32 +56,45 @@ export default function SettingsPage({ settings, onUpdate, theme, onThemeChange 
     setTimeout(() => setSaved(false), 1500);
   };
 
+  // Debounced Nominatim geocoder — searches any village/union/upazila/city
   const handleCitySearch = (val) => {
     setCitySearch(val);
-    if (val.length > 1) {
-      const filtered = CITIES.filter(c =>
-        c.name.toLowerCase().includes(val.toLowerCase()) ||
-        c.country.toLowerCase().includes(val.toLowerCase())
-      ).slice(0, 5);
-      setCitySuggestions(filtered);
-    } else {
-      setCitySuggestions([]);
-    }
+    setCitySuggestions([]);
+    setSearchError('');
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (val.trim().length < 2) return;
+
+    debounceRef.current = setTimeout(async () => {
+      setSearching(true);
+      try {
+        const results = await searchPlace(val, 6);
+        setCitySuggestions(results);
+        if (results.length === 0) setSearchError('No places found. Try a more specific name.');
+      } catch {
+        setSearchError('Search failed. Check your internet connection.');
+      } finally {
+        setSearching(false);
+      }
+    }, 500);
   };
 
-  const selectCity = (city) => {
+  const selectCity = (place) => {
     onUpdate({
-      city: city.name,
-      country: city.country,
-      lat: city.lat,
-      lng: city.lng,
-      timezone: city.tz,
+      city: place.displayName.split(',')[0].trim(),
+      country: place.country,
+      lat: place.lat,
+      lng: place.lng,
+      timezone: place.tz,
     });
     setCitySearch('');
     setCitySuggestions([]);
+    setSearchError('');
     setSaved(true);
     setTimeout(() => setSaved(false), 1500);
   };
+
+  // Clean up debounce on unmount
+  useEffect(() => () => { if (debounceRef.current) clearTimeout(debounceRef.current); }, []);
 
   const handleReset = () => {
     resetAllData();
@@ -126,32 +144,58 @@ export default function SettingsPage({ settings, onUpdate, theme, onThemeChange 
             {settings.lat.toFixed(4)}°N, {settings.lng.toFixed(4)}°E · UTC{settings.timezone >= 0 ? '+' : ''}{settings.timezone}
           </p>
 
-          {/* City search */}
+          {/* Location search — powered by OpenStreetMap Nominatim */}
           <div className="relative">
-            <input
-              type="text"
-              placeholder="Search and change city..."
-              value={citySearch}
-              onChange={e => handleCitySearch(e.target.value)}
-              className="w-full px-3 py-2 rounded-xl bg-black/5 dark:bg-white/5 text-xs outline-none border border-black/5 dark:border-white/5 focus:border-[var(--color-primary)]/40"
-            />
+            <div className="relative">
+              <IconSearch size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-black/30 dark:text-white/30" />
+              {searching && (
+                <IconLoader2 size={13} className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-primary)] animate-spin" />
+              )}
+              <input
+                type="text"
+                placeholder="Search village, union, upazila, city..."
+                value={citySearch}
+                onChange={e => handleCitySearch(e.target.value)}
+                className="w-full pl-8 pr-8 py-2 rounded-xl bg-black/5 dark:bg-white/5 text-xs outline-none border border-black/5 dark:border-white/5 focus:border-[var(--color-primary)]/40"
+              />
+            </div>
+
+            <p className="text-[9px] text-black/30 dark:text-white/30 mt-1 px-1">
+              Powered by OpenStreetMap · Search any village, union or upazila for precise times
+            </p>
+
+            {searchError && (
+              <p className="text-[10px] text-red-500 mt-1 px-1">{searchError}</p>
+            )}
+
             {citySuggestions.length > 0 && (
-              <div className="absolute top-full left-0 right-0 z-50 mt-1 rounded-xl overflow-hidden shadow-xl bg-white dark:bg-[var(--color-dark-card)] border border-black/5 dark:border-white/10">
-                {citySuggestions.map(city => (
+              <div className="absolute top-[calc(100%-8px)] left-0 right-0 z-50 mt-1 rounded-xl overflow-hidden shadow-xl bg-white dark:bg-[var(--color-dark-card)] border border-black/5 dark:border-white/10">
+                {citySuggestions.map((place, idx) => (
                   <button
-                    key={`${city.name}-${city.country}`}
-                    onClick={() => selectCity(city)}
-                    className="w-full px-3 py-2 text-left text-xs hover:bg-[var(--color-primary)]/5 transition-colors border-b border-black/3 last:border-0"
+                    key={idx}
+                    onClick={() => selectCity(place)}
+                    className="w-full px-3 py-2.5 text-left hover:bg-[var(--color-primary)]/5 transition-colors border-b border-black/3 dark:border-white/3 last:border-0"
                   >
-                    <span className="font-semibold">{city.name}</span>
-                    <span className="text-black/40 ml-1">{city.country}</span>
-                    <span className="text-black/25 ml-1">UTC{city.tz >= 0 ? '+' : ''}{city.tz}</span>
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-semibold truncate">{place.displayName}</p>
+                        <p className="text-[9px] text-black/35 dark:text-white/35 truncate mt-0.5">
+                          {place.lat.toFixed(5)}°N, {place.lng.toFixed(5)}°E · {place.country}
+                        </p>
+                      </div>
+                      {place.type && (
+                        <span className="flex-shrink-0 text-[8px] font-bold uppercase px-1.5 py-0.5 rounded-md bg-[var(--color-primary)]/8 text-[var(--color-primary)] dark:bg-[var(--color-accent)]/10 dark:text-[var(--color-accent)]">
+                          {place.type}
+                        </span>
+                      )}
+                    </div>
                   </button>
                 ))}
               </div>
             )}
           </div>
         </div>
+
 
         {/* Prayer Times */}
         <SectionHeader title="Prayer Times" />
@@ -201,15 +245,29 @@ export default function SettingsPage({ settings, onUpdate, theme, onThemeChange 
         <div className="card p-3">
           <SettingRow
             label="Prayer Notifications"
-            description="Enable browser notifications for prayers"
+            description={canNotify() ? 'Browser notifications are enabled' : 'Click to enable browser notifications'}
             icon={IconBell}
             iconColor="#ED8936"
           >
             <Switch
               checked={settings.notifications}
-              onCheckedChange={v => update('notifications', v)}
+              onCheckedChange={async (v) => {
+                if (v) {
+                  const granted = await requestNotificationPermission();
+                  if (!granted) {
+                    alert('Please allow notifications in your browser settings to receive prayer alerts.');
+                    return;
+                  }
+                }
+                update('notifications', v);
+              }}
             />
           </SettingRow>
+          {settings.notifications && !canNotify() && (
+            <p className="text-[10px] text-amber-500 mt-1 px-1">
+              ⚠️ Notification permission denied. Please enable in browser site settings.
+            </p>
+          )}
         </div>
 
         {/* Theme */}

@@ -35,17 +35,18 @@ function safeSet(key, value) {
 
 // ──────────────── SETTINGS ────────────────
 export const DEFAULT_SETTINGS = {
-  city: 'Sylhet',
+  city: 'Shamshernagar',
   country: 'Bangladesh',
-  lat: 24.8949,
-  lng: 91.8687,
+  lat: 24.2842,   // Shamshernagar, Kamalganj, Moulvibazar
+  lng: 91.9100,
   timezone: 6,
-  method: 'MWL',
-  madhab: 'Shafi',
+  method: 'Karachi', // Standard for Bangladesh / South Asia
+  madhab: 'Hanafi',  // Most common madhab in Bangladesh
   language: 'en',
   notifications: false,
   fastingReminder: false,
 };
+
 
 export function getSettings() {
   return { ...DEFAULT_SETTINGS, ...(safeGet(KEYS.SETTINGS) || {}) };

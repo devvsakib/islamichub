@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import {
   IconBell, IconBellOff, IconChevronLeft, IconChevronRight,
@@ -6,9 +6,10 @@ import {
 } from '@tabler/icons-react';
 import { usePrayerTimes } from '@/hooks/usePrayerTimes';
 import { useHijriDate } from '@/hooks/useHijriDate';
-import { calculatePrayerTimes, CALCULATION_METHODS } from '@/utils/prayerCalc';
+import { CALCULATION_METHODS } from '@/utils/prayerCalc';
 import { formatDate, getMonthDates } from '@/utils/storage';
 import { getNotifications, toggleNotification } from '@/utils/storage';
+import { requestNotificationPermission, schedulePrayerNotifications } from '@/utils/notifications';
 import PageWrapper from '@/components/PageWrapper';
 import { IslamicPattern } from '@/components/IslamicPattern';
 
@@ -50,25 +51,35 @@ function getPrayerStatus(key, times, now) {
 }
 
 export default function PrayerPage({ settings }) {
-  const now = new Date();
-  const [selectedDate, setSelectedDate] = useState(now);
+  // Stable reference — must not be `new Date()` inline or it changes every render
+  // and breaks useHijriDate's [date] dependency causing infinite re-renders.
+  const now = useMemo(() => new Date(), []);
   const [notifs, setNotifs] = useState(() => getNotifications());
   const [viewMonth, setViewMonth] = useState({ y: now.getFullYear(), m: now.getMonth() });
 
-  const { formatted: hijriFormatted } = useHijriDate(selectedDate);
-  const { prayerTimes } = usePrayerTimes(settings);
+  const { formatted: hijriFormatted } = useHijriDate(now);
 
-  const selectedTimes = calculatePrayerTimes(
+  // Today's hook drives the next-prayer countdown used elsewhere;
+  // selectedDate switching is handled by the hook internally.
+  const {
+    prayerTimes: selectedTimes,
     selectedDate,
-    settings.lat, settings.lng, settings.timezone,
-    settings.method, settings.madhab
-  );
+    setSelectedDate,
+    loading,
+  } = usePrayerTimes(settings);
 
   const isToday = formatDate(selectedDate) === formatDate(now);
 
-  const handleToggleNotif = (prayer) => {
+  const handleToggleNotif = async (prayer) => {
+    // Request permission on first use
+    await requestNotificationPermission();
     toggleNotification(prayer);
-    setNotifs(getNotifications());
+    const updated = getNotifications();
+    setNotifs(updated);
+    // Re-schedule with the updated per-prayer preferences
+    if (settings.notifications && selectedTimes) {
+      schedulePrayerNotifications(selectedTimes, updated);
+    }
   };
 
   const monthDates = getMonthDates(viewMonth.y, viewMonth.m);
@@ -102,7 +113,7 @@ export default function PrayerPage({ settings }) {
             </div>
             <div className="flex items-center gap-1.5 bg-white/10 rounded-xl px-2.5 py-1.5">
               <IconMapPin size={11} />
-              <span className="text-[11px] font-semibold">{settings.city} · Approx.</span>
+              <span className="text-[11px] font-semibold">{settings.city}</span>
             </div>
           </div>
         </div>
@@ -112,9 +123,14 @@ export default function PrayerPage({ settings }) {
         {/* Prayer Schedule */}
         <div className="card mb-4 overflow-hidden">
           <div className="px-4 py-2.5 border-b border-black/5 dark:border-white/5 flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-widest text-black/40 dark:text-white/40">
-              Schedule
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold uppercase tracking-widest text-black/40 dark:text-white/40">
+                Schedule
+              </span>
+              {loading && (
+                <span className="inline-block w-3 h-3 rounded-full border-2 border-[var(--color-primary)] border-t-transparent animate-spin" />
+              )}
+            </div>
             {!isToday && (
               <button
                 onClick={() => setSelectedDate(now)}
@@ -126,7 +142,7 @@ export default function PrayerPage({ settings }) {
           </div>
 
           {Object.entries(PRAYER_INFO).map(([key, info], i) => {
-            const t = selectedTimes[key];
+            const t = selectedTimes?.[key];
             const status = isToday ? getPrayerStatus(key, selectedTimes, now) : 'upcoming';
             const isNext = status === 'next' || status === 'current';
             const isPast = status === 'past';
@@ -138,9 +154,8 @@ export default function PrayerPage({ settings }) {
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: i * 0.04 }}
-                className={`prayer-row flex items-center gap-3 px-4 py-3 border-b border-black/3 dark:border-white/3 last:border-0 transition-all ${
-                  isNext ? 'next' : ''
-                }`}
+                className={`prayer-row flex items-center gap-3 px-4 py-3 border-b border-black/3 dark:border-white/3 last:border-0 transition-all ${isNext ? 'next' : ''
+                  }`}
               >
                 <span className="text-xl w-7 flex-shrink-0">{info.icon}</span>
 
@@ -166,9 +181,8 @@ export default function PrayerPage({ settings }) {
                 {canNotify && (
                   <button
                     onClick={() => handleToggleNotif(key)}
-                    className={`w-7 h-7 rounded-full flex items-center justify-center transition-all ${
-                      notifs[key] ? 'bg-[var(--color-primary)]/15 text-[var(--color-primary)]' : 'text-black/20 dark:text-white/20'
-                    }`}
+                    className={`w-7 h-7 rounded-full flex items-center justify-center transition-all ${notifs[key] ? 'bg-[var(--color-primary)]/15 text-[var(--color-primary)]' : 'text-black/20 dark:text-white/20'
+                      }`}
                   >
                     {notifs[key] ? <IconBell size={15} /> : <IconBellOff size={15} />}
                   </button>
