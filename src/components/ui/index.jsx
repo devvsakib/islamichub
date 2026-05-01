@@ -51,7 +51,7 @@ export function TabsContent({ value, children, className = '' }) {
 }
 
 // ──── SWITCH ────
-export function Switch({ checked, onCheckedChange, id, disabled }) {
+export function Switch({ checked, onCheckedChange, id, disabled, color = 'var(--color-primary)' }) {
   return (
     <SwitchPrimitive.Root
       checked={checked}
@@ -61,8 +61,8 @@ export function Switch({ checked, onCheckedChange, id, disabled }) {
       className={`relative inline-flex h-6 w-11 cursor-pointer rounded-full border-2 border-transparent 
         transition-colors focus-visible:outline-none
         bg-black/15 dark:bg-white/15
-        data-[state=checked]:bg-[var(--color-primary)]
         disabled:opacity-50 disabled:cursor-not-allowed`}
+      style={{ backgroundColor: checked ? color : undefined }}
     >
       <SwitchPrimitive.Thumb
         className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow-md

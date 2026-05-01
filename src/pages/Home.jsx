@@ -20,6 +20,7 @@ import {
   scheduleFastingReminders,
   cancelAllNotifications,
 } from '@/utils/notifications';
+import { Switch } from '@/components/ui/index.jsx';
 
 const PRAYER_COLORS = {
   fajr: '#8B5CF6',
@@ -282,16 +283,11 @@ export default function Home({ settings, onSettingsNavigate }) {
               </div>
             </div>
           </div>
-          <button
-            onClick={toggleFasting}
-            className={`relative w-12 h-6 rounded-full transition-all duration-300 ${fastingOn ? 'bg-[var(--color-accent)] shadow-[var(--shadow-gold)]' : 'bg-black/10 dark:bg-white/10'
-              }`}
-          >
-            <motion.span
-              animate={{ x: fastingOn ? 24 : 2 }}
-              className="absolute top-1 w-4 h-4 rounded-full bg-white shadow-sm"
-            />
-          </button>
+          <Switch 
+            checked={fastingOn} 
+            onCheckedChange={toggleFasting} 
+            color="var(--color-accent)"
+          />
         </motion.div>
 
         {/* Premium CTA Mesh */}
