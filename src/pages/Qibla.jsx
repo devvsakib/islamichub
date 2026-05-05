@@ -13,6 +13,9 @@ export default function QiblaPage({ settings }) {
   const [distance, setDistance] = useState(null);
   const [suggestions, setSuggestions] = useState([]);
   const [showSug, setShowSug] = useState(false);
+  const [heading, setHeading] = useState(0);
+  const [isTracking, setIsTracking] = useState(false);
+  const [sensorError, setSensorError] = useState(null);
   const needleControls = useAnimation();
 
   useEffect(() => {
@@ -30,6 +33,57 @@ export default function QiblaPage({ settings }) {
       });
     }
   }, [qibla, needleControls]);
+
+  // ── Sensor Logic ──────────────────────────────────────────────
+  const handleOrientation = (e) => {
+    // webkitCompassHeading: iOS
+    // alpha: Android (requires deviceorientationabsolute for reliability)
+    let h = e.webkitCompassHeading || (e.absolute ? e.alpha : null);
+    if (h === null && e.alpha !== undefined && !e.absolute) {
+      // Fallback for Android without absolute support (might drift)
+      h = 360 - e.alpha; 
+    }
+    if (h !== undefined && h !== null) {
+      setHeading(h);
+    }
+  };
+
+  const startTracking = async () => {
+    setSensorError(null);
+    try {
+      if (typeof DeviceOrientationEvent !== 'undefined' && 
+          typeof DeviceOrientationEvent.requestPermission === 'function') {
+        const permission = await DeviceOrientationEvent.requestPermission();
+        if (permission === 'granted') {
+          initSensor();
+        } else {
+          setSensorError('Sensor permission denied');
+        }
+      } else {
+        initSensor();
+      }
+    } catch (err) {
+      console.error('Compass error:', err);
+      setSensorError('Could not access device sensors');
+    }
+  };
+
+  const initSensor = () => {
+    setIsTracking(true);
+    if ('ondeviceorientationabsolute' in window) {
+      window.addEventListener('deviceorientationabsolute', handleOrientation, true);
+    } else {
+      window.addEventListener('deviceorientation', handleOrientation, true);
+    }
+  };
+
+  // Clean up on unmount
+  useEffect(() => {
+    return () => {
+      window.removeEventListener('deviceorientation', handleOrientation);
+      window.removeEventListener('deviceorientationabsolute', handleOrientation);
+    };
+  }, []);
 
   const handleCitySearch = (val) => {
     setCitySearch(val);
@@ -114,8 +168,34 @@ export default function QiblaPage({ settings }) {
         </div>
 
         {/* Compass */}
-        <div className="card p-6 mb-4 flex flex-col items-center">
-          <div className="relative w-64 h-64 mb-5">
+        <div className="card p-6 mb-4 flex flex-col items-center relative overflow-hidden">
+          {/* Permission Overlay */}
+          {!isTracking && (
+            <div className="absolute inset-0 z-40 bg-white/60 dark:bg-black/60 backdrop-blur-[2px] flex flex-col items-center justify-center p-6 text-center">
+              <div className="w-16 h-16 rounded-full bg-[var(--color-primary)]/10 flex items-center justify-center mb-4">
+                <IconCompass size={32} className="text-[var(--color-primary)] dark:text-[var(--color-accent)]" />
+              </div>
+              <h3 className="text-sm font-black mb-2 uppercase tracking-wider">Compass Inactive</h3>
+              <p className="text-[11px] text-black/50 dark:text-white/50 mb-5 leading-relaxed">
+                Sensor access is required for real-time direction. Please place your phone flat.
+              </p>
+              <button
+                onClick={startTracking}
+                className="px-6 py-2.5 bg-[var(--color-primary)] dark:bg-[var(--color-accent)] text-white text-[11px] font-black uppercase tracking-widest rounded-xl shadow-lg active:scale-95 transition-all"
+              >
+                Start Compass
+              </button>
+              {sensorError && (
+                <p className="mt-3 text-[10px] text-red-500 font-bold uppercase">{sensorError}</p>
+              )}
+            </div>
+          )}
+
+          <motion.div 
+            className="relative w-64 h-64 mb-5"
+            animate={{ rotate: -heading }}
+            transition={{ type: 'spring', stiffness: 50, damping: 20 }}
+          >
             {/* Compass rose background */}
             <div className="absolute inset-0 rounded-full border-4 border-[var(--color-primary)]/10 dark:border-[var(--color-accent)]/15" />
             <div className="absolute inset-4 rounded-full border-2 border-[var(--color-primary)]/6 dark:border-[var(--color-accent)]/10" />
@@ -189,7 +269,7 @@ export default function QiblaPage({ settings }) {
                 <div className="w-2 h-1/3 rounded-b-full bg-red-500" />
               </div>
             </motion.div>
-          </div>
+          </motion.div>
 
           {/* Qibla info */}
           {qibla && (
