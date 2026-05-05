@@ -32,11 +32,12 @@ const PRAYER_COLORS = {
 };
 
 const FEATURES = [
+  { label: 'Quran', icon: IconBook, to: '/quran', color: '#6B46C1', bg: '#ede9fe', badge: 'New' },
   { label: 'Prayer Times', icon: IconClock, to: '/prayer', color: '#1B4332', bg: '#d8eee6' },
-  { label: 'Hadiths', icon: IconBook, to: '/hadiths', color: '#6B46C1', bg: '#ede9fe' },
+  { label: 'Hadiths', icon: IconBook, to: '/hadiths', color: '#4299E1', bg: '#dbeafe' },
   { label: 'Progress', icon: IconChartBar, to: '/tracker', color: '#ED8936', bg: '#fef3c7' },
   { label: 'Qibla', icon: IconCompass, to: '/qibla', color: '#E53E3E', bg: '#fee2e2' },
-  { label: 'Duas', icon: IconHandStop, to: '/duas', color: '#4299E1', bg: '#dbeafe' },
+  { label: 'Duas', icon: IconHandStop, to: '/duas', color: '#10B981', bg: '#dbeafe' },
   { label: 'Calendar', icon: IconCalendar, to: '/calendar', color: '#D4A017', bg: '#fef9c3' },
 ];
 
@@ -227,13 +228,18 @@ export default function Home({ settings, onSettingsNavigate }) {
           animate="show"
           className="grid grid-cols-3 gap-4 mb-6"
         >
-          {FEATURES.map(({ label, icon: Icon, to, color, bg }) => (
+          {FEATURES.map(({ label, icon: Icon, to, color, bg, badge }) => (
             <motion.button
               key={to}
               variants={item}
               onClick={() => navigate(to)}
-              className="card group flex flex-col items-center gap-3 p-4 hover:shadow-lg"
+              className="card group flex flex-col items-center gap-3 p-4 hover:shadow-lg relative"
             >
+              {badge && (
+                <span className="absolute top-2 right-2 px-1 py-0.5 rounded-md bg-[var(--color-accent)] text-[7px] font-black text-white uppercase tracking-tighter z-10">
+                  {badge}
+                </span>
+              )}
               <div
                 className="w-12 h-12 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110 group-active:scale-90"
                 style={{ backgroundColor: bg }}

@@ -11,6 +11,7 @@ import HadithsPage from '@/pages/Hadiths';
 import QiblaPage from '@/pages/Qibla';
 import DuasPage from '@/pages/Duas';
 import SettingsPage from '@/pages/Settings';
+import QuranPage from '@/pages/Quran';
 
 function AnimatedRoutes({ settings, updateSettings, theme, setTheme }) {
   const location = useLocation();
@@ -25,6 +26,7 @@ function AnimatedRoutes({ settings, updateSettings, theme, setTheme }) {
         <Route path="/hadiths" element={<HadithsPage settings={settings} />} />
         <Route path="/qibla" element={<QiblaPage settings={settings} />} />
         <Route path="/duas" element={<DuasPage settings={settings} />} />
+        <Route path="/quran" element={<QuranPage settings={settings} />} />
         <Route
           path="/settings"
           element={
