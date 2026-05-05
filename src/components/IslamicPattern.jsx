@@ -1,4 +1,7 @@
+import { useId } from 'react';
+
 export function IslamicPattern({ className = '', opacity = 0.04, color = 'currentColor' }) {
+  const patternId = useId();
   return (
     <svg
       className={`absolute inset-0 w-full h-full pointer-events-none ${className}`}
@@ -6,7 +9,7 @@ export function IslamicPattern({ className = '', opacity = 0.04, color = 'curren
       aria-hidden="true"
     >
       <defs>
-        <pattern id="islamic-geo" x="0" y="0" width="80" height="80" patternUnits="userSpaceOnUse">
+        <pattern id={patternId} x="0" y="0" width="80" height="80" patternUnits="userSpaceOnUse">
           {/* 8-pointed star */}
           <g fill={color} fillOpacity={opacity}>
             <polygon points="40,5 45,25 65,20 50,35 65,50 45,45 40,65 35,45 15,50 30,35 15,20 35,25" />
@@ -23,7 +26,7 @@ export function IslamicPattern({ className = '', opacity = 0.04, color = 'curren
           </g>
         </pattern>
       </defs>
-      <rect width="100%" height="100%" fill="url(#islamic-geo)" />
+      <rect width="100%" height="100%" fill={`url(#${patternId})`} />
     </svg>
   );
 }

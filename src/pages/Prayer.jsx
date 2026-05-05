@@ -137,7 +137,7 @@ export default function PrayerPage({ settings }) {
       <div className="px-5 -mt-8 pb-8">
         {/* Prayer List Card */}
         <div className="card relative overflow-hidden mb-6 p-2">
-          <IslamicPattern opacity={0.01} color="#1B4332" />
+          <IslamicPattern opacity={0.008} color="currentColor" />
           
           <div className="px-4 py-3 flex items-center justify-between border-b border-black/5 dark:border-white/5">
             <span className="text-[10px] font-black uppercase tracking-widest text-black/30 dark:text-white/30">

@@ -131,7 +131,7 @@ export default function Home({ settings, onSettingsNavigate }) {
       </div>
 
       <div className="px-5 -mt-8">
-        {/* Next Prayer Floating Card */}
+        {/* Present & Next Prayer Floating Card */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -139,29 +139,50 @@ export default function Home({ settings, onSettingsNavigate }) {
           className="card relative overflow-hidden mb-6 p-6"
           style={{ borderTop: `4px solid ${prayerColor}` }}
         >
-          <IslamicPattern opacity={0.02} color="#1B4332" />
+          <IslamicPattern opacity={0.01} color="currentColor" />
           <div className="relative z-10">
-            <div className="flex items-center justify-between mb-5">
-              <div>
-                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-black/30 dark:text-white/30 mb-2">
-                  Next Prayer
-                </p>
-                <div className="flex items-baseline gap-3">
-                  <h2 className="text-3xl font-black tracking-tighter" style={{ color: prayerColor }}>
-                    {nextPrayer?.name || '—'}
-                  </h2>
-                  {nextPrayer?.time && (
-                    <span className="text-sm font-bold text-black/40 dark:text-white/40">
-                      at {nextPrayer.time.formatted12}
-                    </span>
-                  )}
+            <div className="flex flex-col gap-6 mb-6">
+              {/* Present Prayer */}
+              {currentPrayer && (
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="px-2.5 py-1 rounded-lg bg-black/5 dark:bg-white/5 text-[9px] font-black uppercase tracking-widest text-black/40 dark:text-white/40 border border-black/5 dark:border-white/5 flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                      Present
+                    </div>
+                    <h3 className="text-lg font-bold tracking-tight text-black/80 dark:text-white/90">
+                      {currentPrayer.name}
+                    </h3>
+                  </div>
+                  <span className="text-[10px] font-bold text-black/30 dark:text-white/30 uppercase tracking-tighter">
+                    Since {currentPrayer.time.formatted12}
+                  </span>
                 </div>
-              </div>
-              <div
-                className="w-14 h-14 rounded-[1.25rem] flex items-center justify-center shadow-inner"
-                style={{ backgroundColor: `${prayerColor}12` }}
-              >
-                <IconClock size={28} style={{ color: prayerColor }} stroke={2.5} />
+              )}
+
+              {/* Next Prayer */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-black/30 dark:text-white/30 mb-2">
+                    Next Prayer
+                  </p>
+                  <div className="flex items-baseline gap-3">
+                    <h2 className="text-3xl font-black tracking-tighter" style={{ color: prayerColor }}>
+                      {nextPrayer?.name || '—'}
+                    </h2>
+                    {nextPrayer?.time && (
+                      <span className="text-sm font-bold text-black/40 dark:text-white/40">
+                        at {nextPrayer.time.formatted12}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <div
+                  className="w-14 h-14 rounded-[1.25rem] flex items-center justify-center shadow-inner"
+                  style={{ backgroundColor: `${prayerColor}12` }}
+                >
+                  <IconClock size={28} style={{ color: prayerColor }} stroke={2.5} />
+                </div>
               </div>
             </div>
 
