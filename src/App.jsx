@@ -12,6 +12,7 @@ import QiblaPage from '@/pages/Qibla';
 import DuasPage from '@/pages/Duas';
 import SettingsPage from '@/pages/Settings';
 import QuranPage from '@/pages/Quran';
+import Onboarding from '@/components/Onboarding';
 
 function AnimatedRoutes({ settings, updateSettings, theme, setTheme }) {
   const location = useLocation();
@@ -49,6 +50,7 @@ export default function App() {
 
   return (
     <BrowserRouter>
+      {!settings.onboarded && <Onboarding onComplete={updateSettings} />}
       <div className="app-shell">
         <AnimatedRoutes
           settings={settings}

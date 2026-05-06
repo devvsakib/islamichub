@@ -278,6 +278,29 @@ export default function SettingsPage({ settings, onUpdate, theme, onThemeChange 
           </div>
         </div>
 
+        {/* Profile Section */}
+        <SectionHeader title="Profile" />
+        <div className="card p-4 space-y-1">
+          <SettingRow label="Display Name" description={settings.name || 'Set your name'} icon={IconSettings} iconColor="#1B4332">
+            <input 
+              type="text" 
+              value={settings.name} 
+              onChange={e => update('name', e.target.value)}
+              placeholder="Your Name"
+              className="w-32 h-9 bg-black/5 dark:bg-white/5 rounded-xl px-3 text-[11px] font-bold outline-none border border-transparent focus:border-[var(--color-primary)]/20"
+            />
+          </SettingRow>
+          <SettingRow label="Age" description={settings.age ? `${settings.age} years old` : 'Optional'} icon={IconSettings} iconColor="#6B46C1">
+            <input 
+              type="number" 
+              value={settings.age} 
+              onChange={e => update('age', e.target.value)}
+              placeholder="Age"
+              className="w-20 h-9 bg-black/5 dark:bg-white/5 rounded-xl px-3 text-[11px] font-bold outline-none border border-transparent focus:border-[var(--color-primary)]/20"
+            />
+          </SettingRow>
+        </div>
+
         {/* Language Section */}
         <SectionHeader title="Language" />
         <div className="card p-4">
@@ -302,6 +325,39 @@ export default function SettingsPage({ settings, onUpdate, theme, onThemeChange 
                 </button>
               ))}
             </div>
+          </SettingRow>
+        </div>
+
+        {/* Data Management Section */}
+        <SectionHeader title="Data Management" />
+        <div className="card p-4">
+          <SettingRow 
+            label="Export Data" 
+            description="Download all your records" 
+            icon={IconSettings} 
+            iconColor="#10B981"
+          >
+            <button 
+              onClick={() => {
+                import('@/utils/storage').then(({ KEYS }) => {
+                  const data = {};
+                  Object.values(KEYS).forEach(k => {
+                    const item = localStorage.getItem(k);
+                    if (item) data[k] = JSON.parse(item);
+                  });
+                  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = `islamichub_backup_${new Date().toISOString().split('T')[0]}.json`;
+                  a.click();
+                  URL.revokeObjectURL(url);
+                });
+              }}
+              className="px-4 py-2 bg-[var(--color-primary)] dark:bg-[var(--color-accent)] text-white text-[10px] font-black uppercase tracking-widest rounded-xl shadow-lg active:scale-95 transition-all"
+            >
+              Export
+            </button>
           </SettingRow>
         </div>
 

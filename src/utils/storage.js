@@ -35,6 +35,8 @@ function safeSet(key, value) {
 
 // ──────────────── SETTINGS ────────────────
 export const DEFAULT_SETTINGS = {
+  name: '',
+  age: '',
   city: 'Shamshernagar',
   country: 'Bangladesh',
   lat: 24.2842,   // Shamshernagar, Kamalganj, Moulvibazar
@@ -45,6 +47,7 @@ export const DEFAULT_SETTINGS = {
   language: 'en',
   notifications: false,
   fastingReminder: false,
+  onboarded: false,
 };
 
 
