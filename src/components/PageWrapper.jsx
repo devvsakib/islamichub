@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import OfflineStatus from './OfflineStatus';
 
 const pageVariants = {
   initial: { opacity: 0, y: 12 },
@@ -14,15 +15,19 @@ const pageTransition = {
 
 export default function PageWrapper({ children, className = '' }) {
   return (
-    <motion.div
-      variants={pageVariants}
-      initial="initial"
-      animate="animate"
-      exit="exit"
-      transition={pageTransition}
-      className={`flex-1 overflow-y-auto page-content ${className}`}
-    >
-      {children}
-    </motion.div>
+    <div className="flex flex-col h-full w-full">
+      <OfflineStatus />
+      <motion.div
+        variants={pageVariants}
+        initial="initial"
+        animate="animate"
+        exit="exit"
+        transition={pageTransition}
+        className={`flex-1 overflow-y-auto page-content ${className}`}
+      >
+        {children}
+      </motion.div>
+    </div>
   );
 }
+

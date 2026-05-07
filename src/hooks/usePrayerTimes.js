@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { fetchPrayerTimings } from '@/utils/aladhanApi';
 import { calculatePrayerTimes, getCurrentAndNextPrayer, getSecondsUntilPrayer } from '@/utils/prayerCalc';
+import { getCachedPrayerTimes, setCachedPrayerTimes, formatDate } from '@/utils/storage';
 
 /**
  * Fetches prayer times from the Al-Adhan API (3-server fallback).
@@ -21,6 +22,15 @@ export function usePrayerTimes(settings) {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  // Initialize from cache if available
+  useEffect(() => {
+    const ds = formatDate(selectedDate);
+    const cached = getCachedPrayerTimes(ds);
+    if (cached) {
+      applyTimes(cached);
+    }
+  }, [selectedDate, applyTimes]);
 
   // Always up-to-date refs for use inside stable callbacks
   const selectedDateRef = useRef(selectedDate);
@@ -44,6 +54,7 @@ export function usePrayerTimes(settings) {
     try {
       const times = await fetchPrayerTimings(date, s);
       applyTimes(times);
+      setCachedPrayerTimes(formatDate(date), times);
       return times;
     } catch (err) {
       console.warn('[usePrayerTimes] API failed, falling back to local calc:', err.message);

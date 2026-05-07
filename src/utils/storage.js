@@ -11,6 +11,7 @@ const KEYS = {
   FAVORITES: 'islamichub_favorites',
   TASBIH: 'islamichub_tasbih',
   THEME: 'islamichub_theme',
+  PRAYER_TIMES_CACHE: 'islamichub_prayer_times_cache',
 };
 
 export { KEYS };
@@ -197,6 +198,18 @@ export function getTheme() {
 
 export function saveTheme(theme) {
   safeSet(KEYS.THEME, theme);
+}
+
+// ──────────────── PRAYER TIMES CACHE ────────────────
+export function getCachedPrayerTimes(dateStr) {
+  const cache = safeGet(KEYS.PRAYER_TIMES_CACHE) || {};
+  return cache[dateStr] || null;
+}
+
+export function setCachedPrayerTimes(dateStr, times) {
+  const cache = safeGet(KEYS.PRAYER_TIMES_CACHE) || {};
+  cache[dateStr] = times;
+  safeSet(KEYS.PRAYER_TIMES_CACHE, cache);
 }
 
 // ──────────────── RESET ALL ────────────────
