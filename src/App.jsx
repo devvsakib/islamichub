@@ -50,15 +50,19 @@ export default function App() {
 
   return (
     <BrowserRouter>
-      {!settings.onboarded && <Onboarding onComplete={updateSettings} />}
       <div className="app-shell">
-        <AnimatedRoutes
-          settings={settings}
-          updateSettings={updateSettings}
-          theme={theme}
-          setTheme={setTheme}
-        />
-        <BottomNav />
+        {!settings.onboarded ? <Onboarding onComplete={updateSettings} />
+          :
+          <>
+            <AnimatedRoutes
+              settings={settings}
+              updateSettings={updateSettings}
+              theme={theme}
+              setTheme={setTheme}
+            />
+            <BottomNav />
+          </>
+        }
       </div>
     </BrowserRouter>
   );
