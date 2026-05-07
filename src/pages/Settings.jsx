@@ -135,7 +135,7 @@ export default function SettingsPage({ settings, onUpdate, theme, onThemeChange 
         </div>
       </div>
 
-      <div className="px-5 -mt-8 pb-10">
+      <div className="px-5 -mt-2 pb-10">
         {/* Location Section */}
         <SectionHeader title="Location" />
         <div className="card p-4 mb-2">
@@ -209,7 +209,7 @@ export default function SettingsPage({ settings, onUpdate, theme, onThemeChange 
           </SettingRow>
 
           <SettingRow
-            label="Madhab (Asr)"
+            label="Madhab"
             description={MADHABS[settings.madhab]?.name}
             icon={IconMapPin}
             iconColor="#6B46C1"
