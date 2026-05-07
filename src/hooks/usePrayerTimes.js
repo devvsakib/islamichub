@@ -23,15 +23,6 @@ export function usePrayerTimes(settings) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Initialize from cache if available
-  useEffect(() => {
-    const ds = formatDate(selectedDate);
-    const cached = getCachedPrayerTimes(ds);
-    if (cached) {
-      applyTimes(cached);
-    }
-  }, [selectedDate, applyTimes]);
-
   // Always up-to-date refs for use inside stable callbacks
   const selectedDateRef = useRef(selectedDate);
   useEffect(() => { selectedDateRef.current = selectedDate; }, [selectedDate]);
@@ -43,6 +34,16 @@ export function usePrayerTimes(settings) {
     setCurrentPrayer(current);
     setNextPrayer(next);
   }, []);
+
+  // Initialize from cache if available
+  useEffect(() => {
+    const ds = formatDate(selectedDate);
+    const cached = getCachedPrayerTimes(ds);
+    if (cached) {
+      applyTimes(cached);
+    }
+  }, [selectedDate, applyTimes]);
+
 
   // Stable fetcher — accepts explicit settings & date so the fetch effect
   // can pass the LATEST values without relying on a ref that may not yet
@@ -71,10 +72,10 @@ export function usePrayerTimes(settings) {
 
   // ── Re-fetch on any key setting or date change ────────────────
   // Extract primitives so React can compare by value, not by object identity.
-  const lat     = settings?.lat;
-  const lng     = settings?.lng;
-  const method  = settings?.method;
-  const madhab  = settings?.madhab;
+  const lat = settings?.lat;
+  const lng = settings?.lng;
+  const method = settings?.method;
+  const madhab = settings?.madhab;
   const timezone = settings?.timezone;
   const dateStr = selectedDate.toDateString();
 
